@@ -42,8 +42,8 @@ public class Repository {
        return service.update(contact, id);
     }
 
-    public Call<Void> deleteUser(Contact contact, String id) {
-       return service.delete(contact, id);
+    public Call<Void> deleteUser(String id) {
+       return service.delete(id);
     }
 
 }

@@ -27,7 +27,7 @@ public interface ContactService {
 
     //eliminar
     @DELETE("contacts/{idContact}")
-    Call<Void> delete(@Body Contact contact, @Path("idContact") String id);
+    Call<Void> delete(@Path("idContact") String id);
 
 
 }

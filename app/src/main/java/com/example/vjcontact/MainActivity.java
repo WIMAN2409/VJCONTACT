@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         getListUsers(); // call API
 
-        btnAdd.setOnClickListener(view -> {
+        btnAdd.setOnClickListener(view -> { // btn add
             startActivity(new Intent(this,EditUserActivity.class));
         });
     }
@@ -61,8 +61,7 @@ public class MainActivity extends AppCompatActivity {
            public void onResponse(Call<List<Contact>> call, Response<List<Contact>> response) {
                if (response.isSuccessful()){
                    users = response.body();
-                   userAdapter = new ListUserAdapter(users);
-
+                   userAdapter = new ListUserAdapter(users,repository);
                    rvListUser.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                    rvListUser.setAdapter(userAdapter);
 
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
            @Override
            public void onFailure(Call<List<Contact>> call, Throwable t) {
-
+                t.printStackTrace();
            }
        });
     }

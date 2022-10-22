@@ -1,5 +1,6 @@
 package com.example.vjcontact.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,14 +14,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.vjcontact.EditUserActivity;
 import com.example.vjcontact.R;
+import com.example.vjcontact.Repository;
 import com.example.vjcontact.entidades.Contact;
 
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class ListUserAdapter extends RecyclerView.Adapter<ListUserAdapter.ViewHolder> {
     List<Contact> usersData;
-    public ListUserAdapter(List<Contact> users) {
+    Repository repository;
+    public ListUserAdapter(List<Contact> users, Repository repository) {
        this.usersData = users;
+       this.repository = repository;
     }
 
     @NonNull
@@ -33,14 +41,33 @@ public class ListUserAdapter extends RecyclerView.Adapter<ListUserAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ListUserAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ListUserAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Contact user = usersData.get(position);
         holder.txtUserName.setText(user.getName()+ " "+user.getLastname());
-        holder.btnEdit.setOnClickListener(view -> {
+
+        holder.btnEdit.setOnClickListener(view -> { // btn edit
             Toast.makeText(view.getContext(),    "Editar Usuario : "+user.getName(), Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(view.getContext(), EditUserActivity.class);
             intent.putExtra("USER_EXTRA",user);
             view.getContext().startActivity(intent);
+        });
+
+        holder.btnDelete.setOnClickListener(view -> {
+            Toast.makeText(view.getContext(), "Eliminando ...", Toast.LENGTH_LONG).show();
+            repository.deleteUser(user.getId()).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()){
+                        usersData.remove(position);
+                        notifyDataSetChanged(); // update rv list
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    t.printStackTrace();
+                }
+            });
         });
     }
 
