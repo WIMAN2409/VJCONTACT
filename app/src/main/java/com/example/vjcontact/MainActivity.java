@@ -1,15 +1,23 @@
 package com.example.vjcontact;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import com.example.vjcontact.adapter.ListUserAdapter;
 import com.example.vjcontact.entidades.Contact;
 import com.example.vjcontact.entidades.ContactService;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,105 +27,54 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String BASE_URL = "https://6352dcc0a9f3f34c374a79ab.mockapi.io/";
     EditText etName, etLasName;
     Button btnEnviar, btnEditar;
+
+    RecyclerView rvListUser;
+
+    List<Contact> users;
+    ListUserAdapter userAdapter;
+
+    Repository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        rvListUser = findViewById(R.id.list_item);
+        FloatingActionButton btnAdd = findViewById(R.id.addNewUser);
 
-    etName = findViewById(R.id.etNombre);
-    etLasName = findViewById(R.id.etApellido);
+        repository = new Repository(); // first init repository call API
 
+        getListUsers(); // call API
 
-    btnEnviar = findViewById(R.id.btnEnviar);
-
-        btnEnviar.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            String name = etName.getText().toString();
-            String lastname = etLasName.getText().toString();
-
-            Contact contact = new Contact();
-            contact.Nombre = name;
-            contact.Apellido = lastname;
-
-            EnviarContacto(contact);
-            Limpiar();
-        }
-    });
-
-    btnEditar = findViewById(R.id.btnEditar);
-        btnEditar.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            String name = etName.getText().toString();
-            String lastname = etLasName.getText().toString();
-
-            Contact contact = new Contact();
-            contact.Nombre = name;
-            contact.Apellido = lastname;
-
-            ActualizarContacto(contact, 1);
-
-        }
-    });
-
-    Contact contact = new Contact();
-    contact.Nombre = "Joel";
-    contact.Apellido = "Huamán";
-
-}
-
-    public  void EnviarContacto(Contact contact){
-        Retrofit retrofit = new Retrofit.Builder() //Configurando Retrofit
-                .baseUrl("https://6352dcc0a9f3f34c374a79ab.mockapi.io/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        ContactService service = retrofit.create(ContactService.class);
-        service.create(contact).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.i("MAIN_APP", "Responde" + response.code());
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-
-            }
+        btnAdd.setOnClickListener(view -> { // btn add
+            startActivity(new Intent(this,EditUserActivity.class));
         });
     }
 
-    public  void ActualizarContacto(Contact contact, int idContact){
-        Retrofit retrofit = new Retrofit.Builder() //Configurando Retrofit
-                .baseUrl("https://6352dcc0a9f3f34c374a79ab.mockapi.io/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+    public void getListUsers() {
+       repository.listUser().enqueue(new Callback<List<Contact>>() {
+           @Override
+           public void onResponse(Call<List<Contact>> call, Response<List<Contact>> response) {
+               if (response.isSuccessful()){
+                   users = response.body();
+                   userAdapter = new ListUserAdapter(users,repository);
+                   rvListUser.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+                   rvListUser.setAdapter(userAdapter);
 
-        ContactService service = retrofit.create(ContactService.class);
-        service.update(contact, idContact).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.i("MAIN_APP", "Responde" + response.body());
-            }
+               }else {
+                   Toast.makeText(MainActivity.this, "Error en el servidor", Toast.LENGTH_SHORT).show();
+               }
+           }
 
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-
-            }
-        });
-    }
-
-
-
-    public void Limpiar(){
-
-        etLasName.setText("");
-        etName.setText("");
-
+           @Override
+           public void onFailure(Call<List<Contact>> call, Throwable t) {
+                t.printStackTrace();
+           }
+       });
     }
 
 }
